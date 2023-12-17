@@ -23,8 +23,8 @@ Route::get('/', function () {
 
 // Just a test route to check my Log message and Queue Job
 Route::get('/log-message', function () {
-    $user = User::where('id',3)->first();
-    $time = '19:00';
+    $user = User::first();
+    $time = '00:00';
     // // Get the content from a specific view (replace 'sample-view' with your view name)
     // $viewContent = View::make('notification_message',['user' => $user, 'scheduledTime' => $time])->render();
 

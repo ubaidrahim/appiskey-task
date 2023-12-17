@@ -30,6 +30,7 @@ class LogMessageJob implements ShouldQueue
      */
     public function handle(): void
     {
+        // render the message via View
         $viewContent = View::make('notification_message',['user' => $this->user, 'scheduledTime' => $this->time])->render();
 
         // Log the content to the laravel.log file
