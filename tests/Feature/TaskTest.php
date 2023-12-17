@@ -59,6 +59,14 @@ class TaskTest extends TestCase
         $this->assertStringContainsString('Hello '.$sampleNotification->user->name, $logContent);
         $this->assertStringContainsString('Your email address is: '.$sampleNotification->user->email, $logContent);
 
+        // Insert a test notification to database to check schedular correctly matches user notifications and timezone.
+        $testNotification = new UserNotification();
+        $testNotification->scheduled_at = Carbon::now($sampleUser->timezone)->format('H:i');
+        $testNotification->frequency = 'daily';
+        $testNotification->user_id = $sampleUser->id;
+        $testNotification->save();
+
+
         // Run the scheduler command to trigger the task schedular
         Artisan::call('schedule:run');
         $logContent = file_get_contents(storage_path('logs/laravel.log'));
@@ -75,9 +83,26 @@ class TaskTest extends TestCase
 
                     // Get the current time in the user's timezone
                     $currentTimeInUserTimezone = Carbon::now($userTimezone)->format('H:i');
-
+                    $frequency = $notification->frequency;
+                    $currentWeekDay = Carbon::now($userTimezone)->dayOfWeek;
+                    $currentDateDay = Carbon::now($userTimezone)->day;
+                    switch ($frequency) {
+                        case 'daily':
+                            $frequency_condition = true;
+                            break;
+                        case 'weekly':
+                            $frequency_condition = ($currentWeekDay == 1) ? true : false;
+                            break;
+                        case 'monthly':
+                            $frequency_condition = ($currentDateDay == 1) ? true : false;
+                            break;
+                        
+                        default:
+                            $frequency_condition = true;
+                            break;
+                    }
                     // Compare the times (assuming you want to check if the current time matches the scheduled time)
-                    return $scheduledTimeInUserTimezone === $currentTimeInUserTimezone;
+                    return $scheduledTimeInUserTimezone === $currentTimeInUserTimezone && $frequency_condition;
                 });
             foreach ($notifications as $thisnotification) {
                 $this->assertStringContainsString('Hello '.$thisnotification->user->name, $logContent);
